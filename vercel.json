@@ -1,22 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/:path*" },
-    { "source": "/:path*", "destination": "/index.html" }
-  ],
-  "redirects": [
-    { "source": "/old-page", "destination": "/new-page", "permanent": true }
-  ],
-  "headers": [
     {
       "source": "/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        }
-      ]
+      "destination": "/index.html"
     }
-  ],
-  "cleanUrls": true,
-  "trailingSlash": false
+  ]
 } 
