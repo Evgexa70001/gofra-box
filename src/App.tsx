@@ -9,7 +9,7 @@ import { AuthProvider } from './contexts/AuthContext';
 const App = () => {
   return (
     <AuthProvider>
-      <Router basename={process.env.PUBLIC_URL || '/'}>
+      <Router basename={import.meta.env.BASE_URL || '/'}>
         <Routes>
           <Route
             path="/"
