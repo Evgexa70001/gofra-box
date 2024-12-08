@@ -277,7 +277,8 @@ const AdminPanel = () => {
         'Категория': product.категория,
         'Количество': product.количество,
         'Наличие': product.наличие,
-        'Лист': product.лист
+        'Лист': product.лист,
+        'Изображение': product.изображение || ''
       }));
 
       // Создание рабочей книги
@@ -312,14 +313,27 @@ const AdminPanel = () => {
             название: item['Название'] || '',
             размер: item['Размер'] || '',
             цена: Number(item['Цена']) || 0,
-            цвет: item['Цвет'] ? item['Цвет'].split(', ') : [],
-            типКартона: item['Тип картона'] || 'микрогофра',
+            цвет: item['Цвет'] 
+              ? item['Цвет'].split(', ')
+                  .filter((c: string) => COLORS.includes(c as typeof COLORS[number])) 
+              : [],
+            типКартона: CARDBOARD_TYPES.includes(item['Тип картона']) ? item['Тип картона'] : 'микрогофра',
             марка: item['Марка'] || '',
-            категория: item['Категория'] || 'самосборные',
+            категория: CATEGORIES.includes(item['Категория']) ? item['Категория'] : 'самосборные',
             количество: Number(item['Количество']) || 0,
-            наличие: item['Наличие'] || 'в наличии',
-            лист: item['Лист'] || ''
+            наличие: AVAILABILITY_STATUS.includes(item['Наличие']) ? item['Наличие'] : 'в наличии',
+            лист: item['Лист'] || '',
+            изображение: item['Изображение'] || ''
           }));
+
+          // Проверка обязательных полей перед импортом
+          const invalidProducts = productsToImport.filter(
+            product => !product.название || !product.размер || !product.марка || !product.лист
+          );
+
+          if (invalidProducts.length > 0) {
+            throw new Error('Некоторые записи содержат пустые обязательные поля');
+          }
 
           // Добавление каждого продукта в базу данных
           for (const product of productsToImport) {
@@ -330,7 +344,7 @@ const AdminPanel = () => {
           alert('Данные успешно импортированы!');
         } catch (error) {
           console.error('Ошибка при импорте:', error);
-          alert('Ошибка при импорте данных');
+          alert('Ошибка при импорте данных: ' + (error as Error).message);
         }
       };
       reader.readAsBinaryString(file);
@@ -646,157 +660,189 @@ const AdminPanel = () => {
         </form>
       </div>
 
-      {/* Products Table */}
+      {/* Products Table/Cards */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="grid grid-cols-12 gap-4 p-6 font-medium text-gray-700 border-b border-gray-100">
-          {/* Column headers with updated styling */}
-          <button onClick={() => handleSort('name')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Название
-            {sortField === 'name' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+        {/* Table Headers - показываем только на десктопе */}
+        <div className="hidden md:grid grid-cols-12 gap-4 p-6 font-medium text-gray-700 border-b border-gray-100">
+          <button onClick={() => handleSort('name')} className="col-span-2 flex items-center gap-2">
+            Название {sortField === 'name' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('size')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Размер
-            {sortField === 'size' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('size')} className="flex items-center gap-2">
+            Размер {sortField === 'size' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('color')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Цвет
-            {sortField === 'color' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('price')} className="flex items-center gap-2">
+            Цена {sortField === 'price' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('price')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Цена
-            {sortField === 'price' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('color')} className="flex items-center gap-2">
+            Цвет {sortField === 'color' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('cardboardType')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Тип картона
-            {sortField === 'cardboardType' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('cardboardType')} className="flex items-center gap-2">
+            Тип картона {sortField === 'cardboardType' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('brand')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Марка
-            {sortField === 'brand' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('brand')} className="flex items-center gap-2">
+            Марка {sortField === 'brand' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('category')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Категория
-            {sortField === 'category' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('category')} className="flex items-center gap-2">
+            Категория {sortField === 'category' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('quantity')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Кол-во
-            {sortField === 'quantity' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('quantity')} className="flex items-center gap-2">
+            Количество {sortField === 'quantity' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('availability')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Наличие
-            {sortField === 'availability' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('availability')} className="flex items-center gap-2">
+            Наличие {sortField === 'availability' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <button onClick={() => handleSort('sheet')} 
-            className="flex items-center gap-2 hover:text-blue-600 transition-colors duration-200">
-            Лист
-            {sortField === 'sheet' && (
-              <span className="text-blue-600">
-                {sortDirection === 'asc' ? '↑' : '↓'}
-              </span>
-            )}
+          <button onClick={() => handleSort('sheet')} className="flex items-center gap-2">
+            Лист {sortField === 'sheet' && (sortDirection === 'asc' ? '↑' : '↓')}
           </button>
-          <div className="flex items-center gap-2">
-            Изображение
-          </div>
-          <div className="flex items-center gap-2">
-            Действия
-          </div>
+          <div>Изображение</div>
+          <div>Действия</div>
         </div>
 
         <div className="divide-y divide-gray-100">
           {getSortedProducts().map((product) => (
-            <div key={product.id} 
-              className="grid grid-cols-12 gap-4 p-6 hover:bg-gray-50 transition-colors duration-200">
-              <div className="truncate">{product.название}</div>
-              <div className="truncate">{product.размер}</div>
-              <div className="truncate">{product.цвет.join(', ')}</div>
-              <div className="truncate">{product.цена}</div>
-              <div className="truncate">{product.типКартона}</div>
-              <div className="truncate">{product.марка}</div>
-              <div className="truncate">{product.категория}</div>
-              <div className="truncate">{product.количество}</div>
-              <div className="truncate">
-                <span className={`px-2 py-1 rounded-full text-sm ${
-                  product.наличие === 'в наличии' 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-yellow-100 text-yellow-800'
-                }`}>
-                  {product.наличие}
-                </span>
-              </div>
-              <div className="truncate">{product.лист}</div>
-              <div className="truncate">
-                {product.изображение && (
-                  <a 
-                    href={product.изображение} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
+            <div key={product.id}>
+              {/* Десктопная версия */}
+              <div className="hidden md:grid grid-cols-12 gap-4 p-6 hover:bg-gray-50 transition-colors duration-200">
+                <div className="col-span-2">{product.название}</div>
+                <div>{product.размер}</div>
+                <div>{product.цена}</div>
+                <div>{product.цвет.join(', ')}</div>
+                <div>{product.типКартона}</div>
+                <div>{product.марка}</div>
+                <div>{product.категория}</div>
+                <div>{product.количество}</div>
+                <div>
+                  <span className={`px-2 py-1 rounded-full text-sm ${
+                    product.наличие === 'в наличии' 
+                      ? 'bg-green-100 text-green-800' 
+                      : 'bg-yellow-100 text-yellow-800'
+                  }`}>
+                    {product.наличие}
+                  </span>
+                </div>
+                <div>{product.лист}</div>
+                <div>
+                  {product.изображение && (
+                    <a 
+                      href={product.изображение} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      Просмотреть
+                    </a>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleEdit(product)}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                    title="Редактировать"
                   >
-                    Просмотреть
-                  </a>
-                )}
+                    <Pencil className="h-5 w-5 text-blue-600" />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product.id!)}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                    title="Удалить"
+                  >
+                    <Trash2 className="h-5 w-5 text-red-600" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleEdit(product)}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
-                  title="Редактировать"
-                >
-                  <Pencil className="h-5 w-5 text-blue-600" />
-                </button>
-                <button
-                  onClick={() => handleDelete(product.id!)}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
-                  title="Удалить"
-                >
-                  <Trash2 className="h-5 w-5 text-red-600" />
-                </button>
+
+              {/* Мобильная версия - карточка */}
+              <div className="md:hidden p-4 hover:bg-gray-50 transition-colors duration-200">
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="font-medium text-gray-900">{product.название}</h3>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                      title="Редактировать"
+                    >
+                      <Pencil className="h-5 w-5 text-blue-600" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product.id!)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                      title="Удалить"
+                    >
+                      <Trash2 className="h-5 w-5 text-red-600" />
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Размер:</div>
+                    <div>{product.размер}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Цвет:</div>
+                    <div>{product.цвет.join(', ')}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Цена:</div>
+                    <div>{product.цена}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Тип картона:</div>
+                    <div>{product.типКартона}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Марка:</div>
+                    <div>{product.марка}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Категория:</div>
+                    <div>{product.категория}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Количество:</div>
+                    <div>{product.количество}</div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Наличие:</div>
+                    <div>
+                      <span className={`px-2 py-1 rounded-full text-sm ${
+                        product.наличие === 'в наличии' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-yellow-100 text-yellow-800'
+                      }`}>
+                        {product.наличие}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="text-gray-500">Лист:</div>
+                    <div>{product.лист}</div>
+                  </div>
+                  
+                  {product.изображение && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="text-gray-500">Изображение:</div>
+                      <div>
+                        <a 
+                          href={product.изображение} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          Просмотреть
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
@@ -1040,11 +1086,12 @@ const AdminPanel = () => {
         </div>
       )}
 
-      <div className="mt-8 flex gap-4 justify-end">
+      <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-end">
         <button
           onClick={exportToExcel}
-          className="px-6 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 
-            transition-all duration-200 flex items-center gap-2 shadow-sm"
+          className="w-full sm:w-auto px-6 py-2.5 bg-green-600 text-white rounded-lg 
+            hover:bg-green-700 transition-all duration-200 flex items-center 
+            justify-center gap-2 shadow-sm"
         >
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
@@ -1063,8 +1110,9 @@ const AdminPanel = () => {
           Экспорт в Excel
         </button>
 
-        <label className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 
-          transition-all duration-200 flex items-center gap-2 shadow-sm cursor-pointer">
+        <label className="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg 
+          hover:bg-blue-700 transition-all duration-200 flex items-center 
+          justify-center gap-2 shadow-sm cursor-pointer">
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             className="h-5 w-5" 

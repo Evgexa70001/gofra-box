@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Package } from 'lucide-react';
+import { Package, Menu, X } from 'lucide-react';
 import CallButton from './CallButton';
 import SocialLinks from './SocialLinks';
 
 const Header = () => {
   const [activeSection, setActiveSection] = useState('home');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     const sections = document.querySelectorAll('section[id]');
@@ -56,6 +57,8 @@ const Header = () => {
       top: offsetPosition,
       behavior: 'smooth'
     });
+    
+    setIsMenuOpen(false);
   };
 
   return (
@@ -71,7 +74,7 @@ const Header = () => {
             <span className="font-['Playfair_Display'] text-2xl">Гофра-Тара</span>
           </a>
           
-          <nav className="flex space-x-6">
+          <nav className="hidden md:flex space-x-6">
             <a 
               href="#home" 
               onClick={handleNavClick}
@@ -118,11 +121,73 @@ const Header = () => {
             </a>
           </nav>
           
-          <div className="flex items-center space-x-6">
+          <div className="hidden md:flex items-center space-x-6">
             <SocialLinks />
             <CallButton />
           </div>
+
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2"
+          >
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
         </div>
+
+        {isMenuOpen && (
+          <div className="md:hidden py-4 border-t">
+            <nav className="flex flex-col space-y-4">
+              <a 
+                href="#home" 
+                onClick={handleNavClick}
+                className={`transition-colors ${
+                  activeSection === 'home' 
+                    ? 'text-primary' 
+                    : 'text-dark hover:text-primary'
+                }`}
+              >
+                Главная
+              </a>
+              <a 
+                href="#catalog" 
+                onClick={handleNavClick}
+                className={`transition-colors ${
+                  activeSection === 'catalog' 
+                    ? 'text-primary' 
+                    : 'text-dark hover:text-primary'
+                }`}
+              >
+                Каталог
+              </a>
+              <a 
+                href="#address" 
+                onClick={handleNavClick}
+                className={`transition-colors ${
+                  activeSection === 'address' 
+                    ? 'text-primary' 
+                    : 'text-dark hover:text-primary'
+                }`}
+              >
+                Адрес
+              </a>
+              <a 
+                href="#footer" 
+                onClick={handleNavClick}
+                className={`transition-colors ${
+                  activeSection === 'footer' 
+                    ? 'text-primary' 
+                    : 'text-dark hover:text-primary'
+                }`}
+              >
+                О нас
+              </a>
+            </nav>
+            <div className="flex flex-col space-y-4 mt-4">
+              <SocialLinks />
+              <CallButton />
+            </div>
+          </div>
+        )}
       </div>
     </header>
   );
