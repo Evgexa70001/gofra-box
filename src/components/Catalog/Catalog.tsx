@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Search, ChevronDown } from 'lucide-react';
 import { db } from '../../config/firebase';
+import { useNavigate } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
+import Cart from '../Cart/Cart';
 
 interface ProductData {
   id?: string;
@@ -18,6 +21,7 @@ interface ProductData {
   категория: 'самосборные' | 'четырехклапанные';
   наличие: 'в наличии' | 'под заказ';
   изображение?: string;
+  количество?: number;
 }
 
 interface FilterState {
@@ -33,6 +37,18 @@ interface FilterState {
   категория: string[];
   цвет: string[];
 }
+
+const getPriceForQuantity = (basePrice: number, quantity: number): number => {
+  if (quantity >= 20000) return basePrice - 0.7;
+  if (quantity >= 10000) return basePrice - 0.6;
+  if (quantity >= 5000) return basePrice - 0.5;
+  if (quantity >= 1000) return basePrice - 0.4;
+  if (quantity >= 500) return basePrice - 0.3;
+  if (quantity >= 100) return basePrice - 0.2;
+  return basePrice;
+};
+
+const ITEMS_PER_PAGE = 9;
 
 const Catalog = () => {
   const [products, setProducts] = useState<ProductData[]>([]);
@@ -52,6 +68,11 @@ const Catalog = () => {
     категория: [],
     цвет: [],
   });
+  const { items, addToCart, updateQuantity, removeItem } = useCart();
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -60,17 +81,20 @@ const Catalog = () => {
         const querySnapshot = await getDocs(q);
         const productsData = querySnapshot.docs.map(doc => {
           const data = doc.data();
+          console.log('Raw product data:', data);
           const [длина, ширина, высота] = (data.размер as string).split('x').map(Number);
           return {
             id: doc.id,
-            ...data,
+            ...(data as Omit<ProductData, 'id' | 'размер'>),
             размер: {
               длина,
               ширина,
               высота
-            }
+            },
+            количество: data.количество || undefined
           };
         }) as ProductData[];
+        console.log('Processed products:', productsData);
         setProducts(productsData);
       } catch (error) {
         console.error('Ошибка при загрузке продуктов:', error);
@@ -128,6 +152,7 @@ const Catalog = () => {
   });
 
   const handleFilterChange = (path: string[], value: string | string[]) => {
+    setCurrentPage(1);
     setFilters(prev => {
       const newFilters = { ...prev };
       let current: any = newFilters;
@@ -169,6 +194,48 @@ const Catalog = () => {
     </div>
   );
 
+  const handleQuantityChange = (productId: string | undefined, value: number) => {
+    if (productId) {
+      const product = products.find(p => p.id === productId);
+      const packageSize = product?.количество || 100;
+      
+      // Если значение меньше размера упаковки, устанавливаем минимальное
+      if (value < packageSize) {
+        setQuantities(prev => ({
+          ...prev,
+          [productId]: packageSize
+        }));
+        return;
+      }
+
+      // Округляем до ближайшего кратного размеру упаковки
+      const remainder = value % packageSize;
+      const roundedValue = remainder === 0 
+        ? value 
+        : value + (packageSize - remainder);
+
+      setQuantities(prev => ({
+        ...prev,
+        [productId]: roundedValue
+      }));
+    }
+  };
+
+  // Вычисляем общее количество страниц
+  const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+
+  // Получаем товары для текущей страницы
+  const currentProducts = filteredProducts.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // Функция для изменения страницы
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return (
       <section className="px-8 py-12">
@@ -186,7 +253,10 @@ const Catalog = () => {
           <input 
             type="text" 
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Поиск товаров..." 
             className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
           />
@@ -373,96 +443,209 @@ const Catalog = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3 gap-8">
-          {filteredProducts.map((product) => (
-            <div 
-              key={product.id} 
-              className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden group"
-            >
-              <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 flex items-center justify-center group-hover:opacity-90 transition-opacity">
-                {product.изображение ? (
-                  <img
-                    src={product.изображение}
-                    alt={product.название}
-                    className="h-full w-full object-contain"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.onerror = null; // Предотвращаем бесконечный цикл
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCAxNmw0LjU4Ni00LjU4NmEyIDIgMCAwMTIuODI4IDBMMTYgMTZtLTItMmwxLjU4Ni0xLjU4NmEyIDIgMCAwMTIuODI4IDBMMjAgMTRtLTYtNmguMDFNNiAyMGgxMmEyIDIgMCAwMDItMlY2YTIgMiAwIDAwLTItMkg2YTIgMiAwIDAwLTIgMnYxMmEyIDIgMCAwMDIgMnoiIHN0cm9rZT0iI0E0QTRBNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=';
-                    }}
-                  />
-                ) : (
-                  <svg 
-                    className="w-16 h-16 text-gray-400" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+          {currentProducts.map((product) => (
+            <div key={product.id} className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden">
+              <div 
+                className="cursor-pointer" 
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
+                <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-48 flex items-center justify-center group-hover:opacity-90 transition-opacity">
+                  {product.изображение ? (
+                    <img
+                      src={product.изображение}
+                      alt={product.название}
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.onerror = null; // Предотвращаем бесконечный цикл
+                        target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNNCAxNmw0LjU4Ni00LjU4NmEyIDIgMCAwMTIuODI4IDBMMTYgMTZtLTItMmwxLjU4Ni0xLjU4NmEyIDIgMCAwMTIuODI4IDBMMjAgMTRtLTYtNmguMDFNNiAyMGgxMmEyIDIgMCAwMDItMlY2YTIgMiAwIDAwLTItMkg2YTIgMiAwIDAwLTIgMnYxMmEyIDIgMCAwMDIgMnoiIHN0cm9rZT0iI0E0QTRBNCIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz48L3N2Zz4=';
+                      }}
                     />
-                  </svg>
-                )}
+                  ) : (
+                    <svg 
+                      className="w-16 h-16 text-gray-400" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                      />
+                    </svg>
+                  )}
+                </div>
+
+                <div className="p-6">
+                  <div className="flex justify-between items-start mb-4">
+                    <h3 className="font-bold text-xl text-gray-800">{product.название}</h3>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      product.наличие === 'в наличии' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-orange-100 text-orange-800'
+                    }`}>
+                      {product.наличие}
+                    </span>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-sm">Размер (мм)</span>
+                        <span className="font-medium text-gray-800">
+                          {`${product.размер.длина}×${product.размер.ширина}×${product.размер.высота}`}
+                        </span>
+                      </div>
+                      
+                      {product.цвет.length > 0 && (
+                        <div className="flex flex-col">
+                          <span className="text-gray-600 text-sm">Цвет</span>
+                          <span className="font-medium text-gray-800">{product.цвет.join(', ')}</span>
+                        </div>
+                      )}
+                      
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-sm">Тип картона</span>
+                        <span className="font-medium text-gray-800">{product.типКартона}</span>
+                      </div>
+                      
+                      {product.количество && (
+                        <div className="flex flex-col">
+                          <span className="text-gray-600 text-sm">Кол-во в упаковке</span>
+                          <span className="font-medium text-gray-800">{product.количество} шт</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-sm">Марка</span>
+                        <span className="font-medium text-gray-800">{product.марка}</span>
+                      </div>
+                      
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-sm">Категория</span>
+                        <span className="font-medium text-gray-800">{product.категория}</span>
+                      </div>
+                      
+                      <div className="flex flex-col">
+                        <span className="text-gray-600 text-sm">Цена</span>
+                        <div className="flex items-baseline space-x-2">
+                          <span className="font-bold text-lg text-blue-600">{product.цена} ₽</span>
+                          <span className="text-gray-500 text-sm">(шт)</span>
+                        </div>
+                        <div className="flex items-baseline space-x-2">
+                          <span className="font-medium text-green-600">{getPriceForQuantity(product.цена, 5000).toFixed(2)} ₽</span>
+                          <span className="text-gray-500 text-sm">от 5000 шт</span>
+                        </div>
+                        {quantities[product.id || ''] && quantities[product.id || ''] >= 100 && (
+                          <div className="flex items-baseline space-x-2 mt-1">
+                            <span className="text-sm text-gray-600">
+                              Сумма: {((quantities[product.id || '']) * getPriceForQuantity(product.цена, quantities[product.id || ''])).toFixed(2)} ₽
+                            </span>
+                            <span className="text-gray-500 text-sm">
+                              за {quantities[product.id || '']} шт
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="font-bold text-xl text-gray-800">{product.название}</h3>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    product.наличие === 'в наличии' 
-                      ? 'bg-green-100 text-green-800' 
-                      : 'bg-orange-100 text-orange-800'
-                  }`}>
-                    {product.наличие}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <div className="flex flex-col">
-                      <span className="text-gray-600 text-sm">Размер (мм)</span>
-                      <span className="font-medium text-gray-800">
-                        {`${product.размер.длина}×${product.размер.ширина}×${product.размер.высота}`}
-                      </span>
-                    </div>
-                    
-                    {product.цвет.length > 0 && (
-                      <div className="flex flex-col">
-                        <span className="text-gray-600 text-sm">Цвет</span>
-                        <span className="font-medium text-gray-800">{product.цвет.join(', ')}</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex flex-col">
-                      <span className="text-gray-600 text-sm">Тип картона</span>
-                      <span className="font-medium text-gray-800">{product.типКартона}</span>
-                    </div>
+              <div className="px-6 pb-6">
+                <div className="mt-4 flex items-end space-x-4">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Количество (шт)
+                    </label>
+                    <input
+                      type="number"
+                      min={product.количество || 100}
+                      step={product.количество || 100}
+                      value={quantities[product.id || ''] || (product.количество || 100)}
+                      onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
                   </div>
-
-                  <div className="space-y-2">
-                    <div className="flex flex-col">
-                      <span className="text-gray-600 text-sm">Марка</span>
-                      <span className="font-medium text-gray-800">{product.марка}</span>
-                    </div>
-                    
-                    <div className="flex flex-col">
-                      <span className="text-gray-600 text-sm">Категория</span>
-                      <span className="font-medium text-gray-800">{product.категория}</span>
-                    </div>
-                    
-                    <div className="flex flex-col">
-                      <span className="text-gray-600 text-sm">Цена</span>
-                      <span className="font-bold text-lg text-blue-600">{product.цена} ₽</span>
-                    </div>
-                  </div>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Предотвращаем всплытие события
+                      const quantity = quantities[product.id || ''] || 100;
+                      const cartItem = {
+                        productId: product.id,
+                        название: product.название,
+                        количество: quantity,
+                        цена: product.цена,
+                        изображение: product.изображение,
+                        количествоВУпаковке: product.количество
+                      };
+                      addToCart(cartItem);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    Добавить в расчет
+                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
+
+      {/* Пагинация */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex justify-center space-x-2">
+          <button
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className={`px-4 py-2 rounded-md ${
+              currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            } border border-gray-300`}
+          >
+            Назад
+          </button>
+          
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => handlePageChange(page)}
+              className={`px-4 py-2 rounded-md border ${
+                currentPage === page
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+          
+          <button
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            className={`px-4 py-2 rounded-md ${
+              currentPage === totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-white text-gray-700 hover:bg-gray-50'
+            } border border-gray-300`}
+          >
+            Вперед
+          </button>
+        </div>
+      )}
+
+      <div className="mt-8">
+        <Cart 
+          items={items}
+          onUpdateQuantity={updateQuantity}
+          onRemoveItem={removeItem}
+        />
+      </div>
     </section>
   );
 };
