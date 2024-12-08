@@ -81,7 +81,7 @@ const Catalog = () => {
 				const querySnapshot = await getDocs(q)
 				const productsData = querySnapshot.docs.map(doc => {
 					const data = doc.data()
-					console.log('Raw product data:', data)
+					// console.log('Raw product data:', data)
 					const [длина, ширина, высота] = (data.размер as string)
 						.split('x')
 						.map(Number)
@@ -96,7 +96,7 @@ const Catalog = () => {
 						количество: data.количество || undefined,
 					}
 				}) as ProductData[]
-				console.log('Processed products:', productsData)
+				// console.log('Processed products:', productsData)
 				setProducts(productsData)
 			} catch (error) {
 				console.error('Ошибка при загрузке продуктов:', error)
