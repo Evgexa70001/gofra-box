@@ -8,6 +8,8 @@ import { AuthProvider } from './contexts/AuthContext'
 import ProductDetail from './components/Pages/ProductDetail'
 import { CartProvider } from './context/CartContext'
 import { HelmetProvider } from 'react-helmet-async'
+import NotFound from './components/Pages/NotFound'
+import YandexMetrikaInit from './components/YandexMetrika/YandexMetrikaInit'
 
 /* eslint-disable react/function-component-definition */
 const App = () => {
@@ -16,6 +18,7 @@ const App = () => {
 			<CartProvider>
 				<AuthProvider>
 					<Router basename={import.meta.env.BASE_URL || '/'}>
+						<YandexMetrikaInit />
 						<Routes>
 							<Route
 								path='/'
@@ -42,6 +45,7 @@ const App = () => {
 									</MainLayout>
 								}
 							/>
+							<Route path='*' element={<NotFound />} />
 						</Routes>
 					</Router>
 				</AuthProvider>

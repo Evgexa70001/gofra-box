@@ -49,9 +49,15 @@ const MainLayout = ({ children }: MainLayoutProps) => {
 				<meta name='twitter:image' content='/path-to-your-logo.jpg' />
 			</Helmet>
 			<div className='min-h-screen bg-gray-100'>
-				<Header />
-				<div className='max-w-[1280px] mx-auto px-4'>{children}</div>
-				<Footer id='footer' />
+				<Header role='banner' aria-label='Шапка сайта' />
+				<main
+					className='max-w-[1280px] mx-auto px-4'
+					role='main'
+					aria-label='Основной контент'
+				>
+					{children}
+				</main>
+				<Footer id='footer' role='contentinfo' aria-label='Подвал сайта' />
 			</div>
 		</>
 	)

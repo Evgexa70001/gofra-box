@@ -4,6 +4,8 @@ import { Helmet } from 'react-helmet'
 
 interface FooterProps {
 	id?: string
+	role?: string
+	'aria-label'?: string
 }
 
 function Footer({ id }: FooterProps) {
