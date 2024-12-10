@@ -969,7 +969,7 @@ const AdminPanel = () => {
 
 							<div className='space-y-2'>
 								<label className='text-sm font-medium text-gray-700'>
-									Марка
+									Материал
 								</label>
 								<input
 									type='text'
@@ -1195,7 +1195,7 @@ const AdminPanel = () => {
 								onClick={() => handleSort('brand')}
 								className='flex items-center gap-2'
 							>
-								Марка{' '}
+								Материал{' '}
 								{sortField === 'brand' && (sortDirection === 'asc' ? '↑' : '↓')}
 							</button>
 							<button
@@ -1886,7 +1886,7 @@ const AdminPanel = () => {
 
 							<div className='space-y-2'>
 								<label className='text-sm font-medium text-gray-700'>
-									Марка
+									Материал
 								</label>
 								<input
 									type='text'

@@ -257,7 +257,7 @@ const ProductDetail = () => {
 										</dd>
 									</div>
 									<div>
-										<dt className='text-sm text-gray-500'>Марка</dt>
+										<dt className='text-sm text-gray-500'>Материал</dt>
 										<dd className='text-base font-medium text-gray-900'>
 											{product.марка}
 										</dd>

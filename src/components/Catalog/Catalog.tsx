@@ -111,7 +111,7 @@ const Catalog = () => {
 				// console.log('Processed products:', productsData)
 				setProducts(productsData)
 			} catch (error) {
-				console.error('Ошибка при загрузке продуктов:', error)
+				console.error('Ошибка пр�� загрузке продуктов:', error)
 			} finally {
 				setLoading(false)
 			}
@@ -551,7 +551,7 @@ const Catalog = () => {
 										<div className='bg-gray-50 p-4 rounded-lg'>
 											<div className='space-y-3'>
 												<label className='block text-sm font-medium text-gray-700'>
-													Марка
+													Материал
 												</label>
 												<div className='space-y-2 max-h-32 overflow-y-auto'>
 													{uniqueValues.марка.map(brand => (
@@ -705,11 +705,10 @@ const Catalog = () => {
 						{currentProducts.map(product => (
 							<article
 								key={product.id}
-								className='bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200'
-								aria-labelledby={`product-title-${product.id}`}
+								className='bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 flex flex-col'
 							>
 								<div
-									className='product-info p-4'
+									className='product-info p-6 flex-1'
 									aria-label='Информация о товаре'
 								>
 									<div
@@ -752,69 +751,81 @@ const Catalog = () => {
 
 										<h3
 											id={`product-title-${product.id}`}
-											className='font-bold text-lg text-gray-800 mb-3 line-clamp-2 hover:text-blue-600 transition-colors'
+											className='font-bold text-lg text-gray-800 mb-3  hover:text-blue-600 transition-colors'
 										>
 											{product.название}
 										</h3>
 									</div>
 
-									<div className='grid grid-cols-2 gap-x-4 gap-y-2 text-sm'>
+									<div className='grid grid-cols-2 gap-x-4 gap-y-2 text-sm w-full'>
 										<div className='space-y-2'>
-											<div>
+											<div className='flex flex-col'>
 												<span className='text-gray-500'>Размер (Д*Ш*В)</span>
-												<div className='font-medium text-gray-900'>
+												<div className='font-medium text-gray-900 truncate'>
 													{`${product.размер.длина}×${product.размер.ширина}×${product.размер.высота}`}
 												</div>
 											</div>
 
 											{product.цвет.length > 0 && (
-												<div>
+												<div className='flex flex-col'>
 													<span className='text-gray-500'>Цвет</span>
-													<div className='font-medium text-gray-900'>
+													<div
+														className='font-medium text-gray-900 truncate'
+														title={product.цвет.join(', ')}
+													>
 														{product.цвет.join(', ')}
 													</div>
 												</div>
 											)}
 
-											<div>
+											<div className='flex flex-col'>
 												<span className='text-gray-500'>Тип картона</span>
-												<div className='font-medium text-gray-900'>
+												<div
+													className='font-medium text-gray-900 truncate'
+													title={product.типКартона}
+												>
 													{product.типКартона}
 												</div>
 											</div>
 										</div>
 
 										<div className='space-y-2'>
-											<div>
-												<span className='text-gray-500'>Марка</span>
-												<div className='font-medium text-gray-900'>
+											<div className='flex flex-col'>
+												<span className='text-gray-500'>Материал</span>
+												<div
+													className='font-medium text-gray-900 truncate'
+													title={product.марка}
+												>
 													{product.марка}
 												</div>
 											</div>
 
-											<div>
+											<div className='flex flex-col'>
 												<span className='text-gray-500'>Категория</span>
-												<div className='font-medium text-gray-900'>
+												<div
+													className='font-medium text-gray-900 truncate'
+													title={product.категория}
+												>
 													{product.категория}
 												</div>
 											</div>
 
-											<div>
+											<div className='flex flex-col'>
 												<span className='text-gray-500'>Цена</span>
 												<div className='flex items-baseline gap-1 mt-1'>
-													<span className='font-bold text-lg text-blue-600'>
+													<span className='font-bold text-lg text-blue-600 truncate'>
 														{getPriceForQuantity(product.цена, 100).toFixed(2)}{' '}
 														₽
 													</span>
 													<span className='text-gray-500 text-xs'>/шт</span>
 												</div>
 												<div className='flex items-baseline gap-1'>
-													<span className='font-medium text-green-600 text-sm'>
+													<span className='font-medium text-green-600 text-sm truncate'>
 														{getPriceForQuantity(product.цена, 5000).toFixed(2)}{' '}
 														₽
 													</span>
-													<span className='text-gray-500 text-xs'>
-														от 5000 шт
+													<span className='text-gray-500 text-xs whitespace-nowrap'>
+														опт.
 													</span>
 												</div>
 											</div>
@@ -822,7 +833,7 @@ const Catalog = () => {
 									</div>
 								</div>
 
-								<div className='px-4 pb-4'>
+								<div className='px-4 pb-4 w-full'>
 									<div className='pt-3 border-t border-gray-100'>
 										<div className='flex items-end gap-3'>
 											<div className='flex-1'>
