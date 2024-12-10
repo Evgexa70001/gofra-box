@@ -16,38 +16,45 @@ function Header({}: HeaderProps) {
 	useEffect(() => {
 		const sections = document.querySelectorAll('section[id]')
 
-		const observerOptions = {
-			threshold: [0.2, 0.5, 0.8],
-			rootMargin: '-100px 0px -100px 0px',
-		}
-
-		const observerCallback: IntersectionObserverCallback = () => {
-			const visibleSections = Array.from(sections).filter(section => {
-				const rect = section.getBoundingClientRect()
-				return rect.top < window.innerHeight && rect.bottom >= 0
+		const checkVisibleSections = (entries: IntersectionObserverEntry[]) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					setActiveSection(entry.target.id)
+				}
 			})
-
-			if (visibleSections.length > 0) {
-				const mostVisible = visibleSections.reduce((prev, current) => {
-					const prevBounds = prev.getBoundingClientRect()
-					const currentBounds = current.getBoundingClientRect()
-					const prevVisibleHeight =
-						Math.min(prevBounds.bottom, window.innerHeight) -
-						Math.max(prevBounds.top, 0)
-					const currentVisibleHeight =
-						Math.min(currentBounds.bottom, window.innerHeight) -
-						Math.max(currentBounds.top, 0)
-					return currentVisibleHeight > prevVisibleHeight ? current : prev
-				})
-
-				setActiveSection(mostVisible.id)
-			}
 		}
 
-		const observer = new IntersectionObserver(observerCallback, observerOptions)
+		const handleScroll = () => {
+			const scrollPosition = window.scrollY + window.innerHeight / 2
+
+			sections.forEach(section => {
+				const { top, bottom } = section.getBoundingClientRect()
+				const sectionTop = top + window.scrollY
+				const sectionBottom = bottom + window.scrollY
+
+				if (scrollPosition >= sectionTop && scrollPosition <= sectionBottom) {
+					setActiveSection(section.id)
+				}
+			})
+		}
+
+		const observerOptions = {
+			threshold: 0.5,
+			rootMargin: '-20% 0px -20% 0px',
+		}
+
+		const observer = new IntersectionObserver(
+			checkVisibleSections,
+			observerOptions
+		)
 		sections.forEach(section => observer.observe(section))
 
-		return () => observer.disconnect()
+		window.addEventListener('scroll', handleScroll)
+
+		return () => {
+			observer.disconnect()
+			window.removeEventListener('scroll', handleScroll)
+		}
 	}, [])
 
 	const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>) => {

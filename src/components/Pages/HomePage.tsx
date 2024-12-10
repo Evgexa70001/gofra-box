@@ -1,9 +1,16 @@
+import { Suspense } from 'react'
 import Slider from '../Slider/Slider'
+import SEO from '../SEO/SEO'
+import FAQ from '../FAQ/FAQ'
 import Catalog from '../Catalog/Catalog'
 import Map from '../Map/Map'
-import SEO from '../SEO/SEO'
 import MaterialsTable from '../MaterialsTable/MaterialsTable'
-import FAQ from '../FAQ/FAQ'
+
+// Ленивая загрузка компонентов
+// const Catalog = lazy(() => import('../Catalog/Catalog'))
+// const Map = lazy(() => import('../Map/Map'))
+// const MaterialsTable = lazy(() => import('../MaterialsTable/MaterialsTable'))
+// const FAQ  import('../FAQ/FAQ'))
 
 const HomePage = () => {
 	return (
@@ -16,19 +23,21 @@ const HomePage = () => {
 			<section id='home'>
 				<Slider />
 			</section>
-			<section id='faq'>
-				<FAQ />
-			</section>
-			<section id='catalog'>
-				<Catalog />
-			</section>
-			<section id='catalog'>
-				<MaterialsTable />
-			</section>
 
-			<section id='address'>
-				<Map />
-			</section>
+			<Suspense fallback={<div>Загрузка...</div>}>
+				<section id='faq'>
+					<FAQ />
+				</section>
+				<section id='catalog'>
+					<Catalog />
+				</section>
+				<section id='materials'>
+					<MaterialsTable />
+				</section>
+				<section id='address'>
+					<Map />
+				</section>
+			</Suspense>
 		</>
 	)
 }

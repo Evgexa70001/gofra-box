@@ -8,6 +8,7 @@ import Cart from '../Cart/Cart'
 import LazyImage from '../UI/LazyImage'
 import Slider from 'rc-slider'
 import 'rc-slider/assets/index.css'
+import ProductSkeleton from './ProductSkeleton'
 
 interface ProductData {
 	id?: string
@@ -399,7 +400,33 @@ const Catalog = () => {
 	if (loading) {
 		return (
 			<section className='px-8 py-12'>
-				<div className='text-center'>Загрузка...</div>
+				<h1 className='text-3xl font-bold mb-8'>
+					Каталог картонных коробок и упаковки
+				</h1>
+
+				<div className='mb-8'>
+					<h2 className='text-2xl font-semibold mb-4'>Фильтры и поиск</h2>
+					<div className='relative'>
+						<div className='relative'>
+							<input
+								type='text'
+								disabled
+								placeholder='Поиск товаров...'
+								className='w-full pl-12 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm'
+							/>
+							<Search className='w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2' />
+						</div>
+					</div>
+				</div>
+
+				<div className='mb-8'>
+					<h2 className='text-2xl font-semibold mb-4'>Товары</h2>
+					<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
+						{[...Array(8)].map((_, index) => (
+							<ProductSkeleton key={index} />
+						))}
+					</div>
+				</div>
 			</section>
 		)
 	}
