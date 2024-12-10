@@ -45,6 +45,7 @@ const App = () => {
 									</MainLayout>
 								}
 							/>
+
 							<Route path='*' element={<NotFound />} />
 						</Routes>
 					</Router>

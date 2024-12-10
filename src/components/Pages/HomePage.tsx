@@ -2,6 +2,8 @@ import Slider from '../Slider/Slider'
 import Catalog from '../Catalog/Catalog'
 import Map from '../Map/Map'
 import SEO from '../SEO/SEO'
+import MaterialsTable from '../MaterialsTable/MaterialsTable'
+import FAQ from '../FAQ/FAQ'
 
 const HomePage = () => {
 	return (
@@ -14,9 +16,16 @@ const HomePage = () => {
 			<section id='home'>
 				<Slider />
 			</section>
+			<section id='faq'>
+				<FAQ />
+			</section>
 			<section id='catalog'>
 				<Catalog />
 			</section>
+			<section id='catalog'>
+				<MaterialsTable />
+			</section>
+
 			<section id='address'>
 				<Map />
 			</section>

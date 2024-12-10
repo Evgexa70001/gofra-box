@@ -99,6 +99,17 @@ function Header({}: HeaderProps) {
 							Главная
 						</a>
 						<a
+							href='#faq'
+							onClick={handleNavClick}
+							className={`transition-colors ${
+								activeSection === 'faq'
+									? 'text-primary'
+									: 'text-dark hover:text-primary'
+							}`}
+						>
+							Информация
+						</a>
+						<a
 							href='#catalog'
 							onClick={handleNavClick}
 							className={`transition-colors ${
@@ -109,6 +120,7 @@ function Header({}: HeaderProps) {
 						>
 							Каталог
 						</a>
+
 						<a
 							href='#address'
 							onClick={handleNavClick}
