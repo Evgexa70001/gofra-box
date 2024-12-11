@@ -814,7 +814,7 @@ const Catalog = () => {
 												<span className='text-gray-500'>Цена</span>
 												<div className='flex items-baseline gap-1 mt-1'>
 													<span className='font-bold text-lg text-blue-600 truncate'>
-														{getPriceForQuantity(product.цена, 100).toFixed(2)}{' '}
+														{product.цена}
 														₽
 													</span>
 													<span className='text-gray-500 text-xs'>/шт</span>
