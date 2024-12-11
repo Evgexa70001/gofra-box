@@ -6,15 +6,14 @@ const CallButton = () => {
 
   const phoneNumbers = [
     { number: '+7 (928) 929-06-89', label: 'Основной' },
-    { number: '+7 (928) 006-21-26', label: 'Дополнительный' }
+    { number: '+7 (928) 006-21-26', label: 'Дополнительный' },
   ];
 
   return (
     <div className="relative">
-      <button 
+      <button
         className="bg-primary text-white px-4 py-2 rounded hover:bg-opacity-90 flex items-center gap-2"
-        onClick={() => setIsOpen(!isOpen)}
-      >
+        onClick={() => setIsOpen(!isOpen)}>
         <Phone size={20} />
         <span>Позвонить</span>
       </button>
@@ -26,8 +25,7 @@ const CallButton = () => {
               <a
                 key={phone.number}
                 href={`tel:${phone.number.replace(/[^\d+]/g, '')}`}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-              >
+                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                 <Phone size={16} className="mr-2" />
                 <div>
                   <div className="font-medium">{phone.number}</div>
@@ -42,4 +40,4 @@ const CallButton = () => {
   );
 };
 
-export default CallButton; 
+export default CallButton;
