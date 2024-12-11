@@ -4,68 +4,28 @@ declare global {
   }
 }
 
+import { useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
 
-const YANDEX_METRIKA_ID = '99168098';
-
-type YandexMetrikaWindow = Window & {
-  [key: string]: any;
-};
-
 const YandexMetrikaInit = () => {
-  useEffect(() => {
-    if (typeof window !== 'undefined' && YANDEX_METRIKA_ID) {
-      try {
-        (function (
-          m: YandexMetrikaWindow,
-          e: Document,
-          t: string,
-          r: string,
-          i: string,
-          k: any,
-          a: any,
-        ) {
-          m[i] =
-            m[i] ||
-            function () {
-              (m[i].a = m[i].a || []).push(arguments);
-            };
-          m[i].l = 1 * new Date().getTime();
-          for (var j = 0; j < document.scripts.length; j++) {
-            if (document.scripts[j].src === r) {
-              return;
-            }
-          }
-          (k = e.createElement(t)),
-            (a = e.getElementsByTagName(t)[0]),
-            (k.async = 1),
-            (k.src = r),
-            (k.onerror = function () {
-              console.warn('Не удалось загрузить Яндекс Метрику');
-            }),
-            a.parentNode.insertBefore(k, a);
-        })(
-          window as YandexMetrikaWindow,
-          document,
-          'script',
-          'https://mc.yandex.ru/metrika/tag.js',
-          'ym',
-          undefined,
-          undefined,
-        );
+  const location = useLocation();
+  const METRIKA_ID = '99168098';
+  const isDevelopment = import.meta.env.DEV;
 
-        window.ym(Number(YANDEX_METRIKA_ID), 'init', {
-          defer: true,
-          clickmap: true,
-          trackLinks: true,
-          accurateTrackBounce: true,
-          webvisor: true,
-        });
+  useEffect(() => {
+    if (isDevelopment) {
+      console.log('Yandex.Metrika disabled in development mode');
+      return;
+    }
+
+    if (typeof window.ym === 'function' && METRIKA_ID) {
+      try {
+        window.ym(Number(METRIKA_ID), 'hit', window.location.pathname + window.location.search);
       } catch (error) {
-        console.warn('Ошибка инициализации Яндекс Метрики:', error);
+        console.error('Yandex.Metrika error:', error);
       }
     }
-  }, []);
+  }, [location, METRIKA_ID, isDevelopment]);
 
   return null;
 };

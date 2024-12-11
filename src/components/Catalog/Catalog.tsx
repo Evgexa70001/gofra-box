@@ -408,7 +408,7 @@ const Catalog = () => {
 
   return (
     <section className="px-8 py-12">
-      <h1 className="text-3xl font-bold mb-8">Каталог картонных коробок и упаковки</h1>
+      <h1 className="text-3xl font-bold mb-8">Катало катонных коробок и упаковки</h1>
 
       <div className="mb-8">
         <h2 className="text-2xl font-semibold mb-4">Фильтры и поиск</h2>
