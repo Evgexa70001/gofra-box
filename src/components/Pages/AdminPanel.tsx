@@ -33,6 +33,7 @@ interface ProductData {
 interface WarehouseItem {
   id?: string;
   размерЛиста: string; // длина x ширина
+  размерРелевки: number; // Меняем тип на number
   связанныеТовары: {
     id: string;
     название: string;
@@ -91,11 +92,12 @@ const AdminPanel = () => {
   const [warehouseItems, setWarehouseItems] = useState<WarehouseItem[]>([]);
   const [warehouseData, setWarehouseData] = useState<WarehouseItem>({
     размерЛиста: '',
+    размерРелевки: 0, // Инициализируем нулем
     связанныеТовары: [],
     количество: 0,
     стоимость: 0,
     статус: 'В наличии',
-    цвет: [], // Инициализируем пустым массивом
+    цвет: [], // Очищаем массив цветов
     типКартона: 'микрогофра',
   });
 
@@ -509,7 +511,7 @@ const AdminPanel = () => {
     }
   };
 
-  // Добавляем функцию обработки изменений в форме склада
+  // Добавляем функцию обрабтки изменений в форме склада
   const handleWarehouseInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) => {
@@ -578,6 +580,7 @@ const AdminPanel = () => {
       // Очищаем форму
       setWarehouseData({
         размерЛиста: '',
+        размерРелевки: 0, // Инициализируем нулем
         связанныеТовары: [],
         количество: 0,
         стоимость: 0,
@@ -640,6 +643,7 @@ const AdminPanel = () => {
       // Подготовка данных для экспорта
       const exportData = warehouseItems.map((item) => ({
         'Размер листа': item.размерЛиста,
+        'Размер релевки': item.размерРелевки, // Добавляем новое поле
         'Связанные товары': item.связанныеТовары
           .map((product) => `${product.название} (${product.размер})`)
           .join('; '),
@@ -680,6 +684,7 @@ const AdminPanel = () => {
           // Получаем существующие позиции для проверки дубликатов
           const existingItems = warehouseItems.map((item) => ({
             размерЛиста: item.размерЛиста,
+            размерРелевки: item.размерРелевки, // Добавляем новое поле
             связанныеТоварыIds: item.связанныеТовары
               .map((p) => p.id)
               .sort()
@@ -715,6 +720,7 @@ const AdminPanel = () => {
 
             return {
               размерЛиста: item['Размер листа'] || '',
+              размерРелевки: item['Размер релевки'] || '', // Добавляем новое поле
               связанныеТовары,
               количество: Number(item['Количество']) || 0,
               стоимость: Number(item['Стоимость']) || 0,
@@ -1350,6 +1356,20 @@ const AdminPanel = () => {
               </div>
 
               <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Размер релевки (мм)</label>
+                <input
+                  type="number"
+                  name="размерРелевки"
+                  placeholder="например: 100"
+                  min="0"
+                  value={warehouseData.размерРелевки}
+                  onChange={handleWarehouseInputChange}
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Связанные товары</label>
                 <div className="relative">
                   <input
@@ -1501,6 +1521,7 @@ const AdminPanel = () => {
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className="text-left p-3">Размер листа</th>
+                      <th className="text-left p-3">Размер релевки</th> {/* Новая колонка */}
                       <th className="text-left p-3">Связанные товары</th>
                       <th className="text-left p-3">Количество</th>
                       <th className="text-left p-3">Стоимость</th>
@@ -1514,6 +1535,7 @@ const AdminPanel = () => {
                     {warehouseItems.map((item) => (
                       <tr key={item.id} className="border-b border-gray-100">
                         <td className="p-3">{item.размерЛиста}</td>
+                        <td className="p-3">{item.размерРелевки}</td> {/* Новая ячейка */}
                         <td className="p-3">
                           <div className="space-y-1">
                             {item.связанныеТовары.map((product) => (
@@ -1898,6 +1920,24 @@ const AdminPanel = () => {
                     setEditingWarehouseItem({
                       ...editingWarehouseItem,
                       размерЛиста: e.target.value,
+                    })
+                  }
+                  className="w-full px-4 py-2 border border-gray-200 rounded-lg"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-700">Размер релевки (мм)</label>
+                <input
+                  type="number"
+                  placeholder="например: 100"
+                  min="0"
+                  value={editingWarehouseItem.размерРелевки}
+                  onChange={(e) =>
+                    setEditingWarehouseItem({
+                      ...editingWarehouseItem,
+                      размерРелевки: Number(e.target.value), // Convert string to number
                     })
                   }
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg"
