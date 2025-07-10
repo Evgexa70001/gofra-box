@@ -10,22 +10,15 @@
 		"preview": "vite preview"
 	},
 	"dependencies": {
-		"@pbe/react-yandex-maps": "^1.2.5",
-		"@react-three/drei": "^9.120.4",
-		"@react-three/fiber": "^8.17.10",
 		"@types/react-helmet": "^6.1.11",
 		"chart.js": "^4.4.7",
 		"firebase": "^11.0.2",
 		"lucide-react": "^0.468.0",
-		"rc-slider": "^11.1.7",
 		"react": "^18.2.0",
 		"react-chartjs-2": "^5.2.0",
 		"react-dom": "^18.2.0",
-		"react-firebase-hooks": "^5.1.1",
-		"react-helmet": "^6.1.0",
 		"react-helmet-async": "^2.0.5",
 		"react-router-dom": "^7.0.2",
-		"three": "^0.171.0",
 		"xlsx": "^0.18.5"
 	},
 	"devDependencies": {

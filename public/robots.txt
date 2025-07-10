@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://gofra-tara.ru/sitemap.xml
+
+# Disallow admin panel
+Disallow: /admin
+Disallow: /login
+
+# Allow all other content
+Allow: /assets/
+Allow: /images/
+Allow: /public/ 
